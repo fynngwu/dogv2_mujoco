@@ -1,0 +1,205 @@
+<mujoco model="dog_v2_2_4">
+  <compiler angle="radian" autolimits="true" eulerseq="zyx" meshdir="meshes"/>
+  <option gravity='0 0 -9.81'>
+    <flag frictionloss="enable"/>
+  </option>
+  <size njmax="500" nconmax="100" />
+
+  <default>
+    <joint limited='true'/>
+    <motor ctrllimited='true'/>
+    <geom condim='1' contype="1" conaffinity="0" friction='0.6 0.2 0.2'/>
+    <default class='leg_joint_param'>
+      <joint damping="0.5" frictionloss="0.01" armature="0.01"/>
+    </default>
+    <default class="foot_collision">
+      <geom type="sphere" size="0.02" condim="6" friction="10.0 0.05 0.01"/>
+    </default>
+  </default>
+
+  <asset>
+    <hfield name="terrain" nrow="100" ncol="100" size="50 50 0.5 0.1"/>
+    <mesh name="base_link" file="base_link.STL"/>
+    <mesh name="LF_HipA_link" file="LF_HipA_link.STL"/>
+    <mesh name="LF_HipF_link" file="LF_HipF_link.STL"/>
+    <mesh name="LF_Knee_link" file="LF_Knee_link.STL"/>
+    <mesh name="LF_Foot_link" file="LF_Foot_link.STL"/>
+    <mesh name="LR_HipA_link" file="LR_HipA_link.STL"/>
+    <mesh name="LR_HipF_link" file="LR_HipF_link.STL"/>
+    <mesh name="LR_Knee_link" file="LR_Knee_link.STL"/>
+    <mesh name="LR_Foot_link" file="LR_Foot_link.STL"/>
+    <mesh name="RF_HipA_link" file="RF_HipA_link.STL"/>
+    <mesh name="RF_HipF_link" file="RF_HipF_link.STL"/>
+    <mesh name="RF_Knee_link" file="RF_Knee_link.STL"/>
+    <mesh name="RF_Foot_link" file="RF_Foot_link.STL"/>
+    <mesh name="RR_HipA_link" file="RR_HipA_link.STL"/>
+    <mesh name="RR_HipF_link" file="RR_HipF_link.STL"/>
+    <mesh name="RR_Knee_link" file="RR_Knee_link.STL"/>
+    <mesh name="RR_Foot_link" file="RR_Foot_link.STL"/>
+  </asset>
+
+  <worldbody>
+    <light directional="true" diffuse=".4 .4 .4" pos="0 0 5.0" dir="0 0 -1"/>
+    <geom name="floor" type="plane" size="50 50 0.1" condim="3" friction="1.0 0.2 0.2" conaffinity="1" rgba="0.2 0.3 0.4 1"/>
+
+    <body name="base_link" pos="0 0 0.35">
+      <freejoint name="floating_base"/>
+      <inertial pos="0.003073 -0.000011 0.058211" mass="5.276437" fullinertia="0.032842099924 0.103762167556 0.116538404566 0.00003336928 -0.007254554244 0.00003335365"/>
+
+      <site name='imu' size='0.01' pos='0 0 0'/>
+      <geom type="mesh" mesh="base_link" rgba="0.75 0.75 0.75 1" contype="0" conaffinity="0" group="1"/>
+
+      <body name="LF_HipA_link" pos="0.16 0.0675 0.063" quat="0.5 0.5 0.5 0.5">
+        <inertial pos="0.002621 0.000052 0.046852" mass="0.452382" fullinertia="0.00055866874 0.000347032635 0.000308951038 0.000000341744 -0.000000708495 -0.000000091476"/>
+        <joint name="LF_HipA_joint" axis="0 0 1" range="-0.7853982 0.7853982" class="leg_joint_param"/>
+        <geom type="mesh" mesh="LF_HipA_link"/>
+
+        <body name="LF_HipF_link" pos="0.018 0 0.048" quat="0.707 0 0.707 0">
+          <inertial pos="0.033261 -0.016881 0.050217" mass="0.779164" fullinertia="0.001597433226 0.003268376129 0.004330433943 0.001505087455 -0.000442930553 0.000224661879"/>
+          <joint name="LF_HipF_joint" axis="0 0 1" range="-1.2217658 0.8726683" class="leg_joint_param"/>
+          <geom type="mesh" mesh="LF_HipF_link"/>
+
+          <body name="LF_Knee_link" pos="0.1707 -0.1222 0.05">
+            <inertial pos="-0.055107 -0.080197 0.016515" mass="0.121558" fullinertia="0.000549292448 0.000223695708 0.000769619177 -0.000333360171 -0.000000107893 -0.000000188213"/>
+            <joint name="LF_Knee_joint" axis="0 0 1" range="-1.2217299 0.69813" class="leg_joint_param"/>
+            <geom type="mesh" mesh="LF_Knee_link"/>
+            <site name="LF_foot_site" pos="-0.11 -0.19 0.016" size="0.01"/>
+            <geom name="LF_foot_visual" type="mesh" mesh="LF_Foot_link" pos="-0.11 -0.19 0.016" quat="0 0 0.707 0.707"
+                  contype="0" conaffinity="0" group="1"/>
+            <geom name="LF_foot_collision" class="foot_collision" pos="-0.11 -0.19 0.016" rgba="0 0 0 0"/>
+          </body>
+        </body>
+      </body>
+
+      <body name="LR_HipA_link" pos="-0.16 0.0675 0.063" quat="0.5 0.5 -0.5 -0.5">
+        <inertial pos="-0.002621 -0.000052 0.046852" mass="0.452382" fullinertia="0.00055866874 0.000347032635 0.000308951038 0.000000341744 0.000000708495 0.000000091476"/>
+        <joint name="LR_HipA_joint" axis="0 0 1" range="-0.7853982 0.7853982" class="leg_joint_param"/>
+        <geom type="mesh" mesh="LR_HipA_link"/>
+
+        <body name="LR_HipF_link" pos="-0.018 0 0.048" quat="0.707 0 -0.707 0">
+          <inertial pos="0.03326 -0.016881 0.050217" mass="0.779164" fullinertia="0.001597433226 0.003268376129 0.004330433943 0.001505087455 -0.000442930553 0.000224661879"/>
+          <joint name="LR_HipF_joint" axis="0 0 1" range="-1.2217305 0.8726683" class="leg_joint_param"/>
+          <geom type="mesh" mesh="LR_HipF_link"/>
+
+          <body name="LR_Knee_link" pos="0.1707 -0.1222 0.05">
+            <inertial pos="-0.055107 -0.080197 0.016515" mass="0.121558" fullinertia="0.000549292448 0.000223695708 0.000769619177 -0.000333360171 -0.000000107893 -0.000000188213"/>
+            <joint name="LR_Knee_joint" axis="0 0 1" range="-1.2217299 0.69813" class="leg_joint_param"/>
+            <geom type="mesh" mesh="LR_Knee_link"/>
+            <site name="LR_foot_site" pos="-0.11 -0.19 0.016" size="0.01"/>
+            <geom name="LR_foot_visual" type="mesh" mesh="LR_Foot_link" pos="-0.11 -0.19 0.016" quat="0 0 -0.707 -0.707"
+                  contype="0" conaffinity="0" group="1"/>
+            <geom name="LR_foot_collision" class="foot_collision" pos="-0.11 -0.19 0.016" rgba="0 0 0 0"/>
+          </body>
+        </body>
+      </body>
+
+      <body name="RF_HipA_link" pos="0.16 -0.0675 0.063" quat="0.5 0.5 0.5 0.5">
+        <inertial pos="-0.002621 -0.000052 0.046852" mass="0.452382" fullinertia="0.00055866874 0.000347032635 0.000308951038 0.000000341744 0.000000708495 0.000000091476"/>
+        <joint name="RF_HipA_joint" axis="0 0 1" range="-0.7853982 0.7853982" class="leg_joint_param"/>
+        <geom type="mesh" mesh="RF_HipA_link"/>
+
+        <body name="RF_HipF_link" pos="-0.018 0 0.048" quat="0.707 0 -0.707 0">
+          <inertial pos="-0.033247 -0.016939 0.050217" mass="0.779164" fullinertia="0.001595827327 0.00326915934 0.004329611254 -0.001503634909 0.000443182676 0.000223603548"/>
+          <joint name="RF_HipF_joint" axis="0 0 1" range="-0.8726999 1.2217342" class="leg_joint_param"/>
+          <geom type="mesh" mesh="RF_HipF_link"/>
+
+          <body name="RF_Knee_link" pos="-0.1707 -0.1222 0.05">
+            <inertial pos="0.055107 -0.080197 0.016485" mass="0.121558" fullinertia="0.000549292448 0.000223695708 0.000769619177 0.000333360171 -0.000000107893 0.000000188213"/>
+            <joint name="RF_Knee_joint" axis="0 0 1" range="-0.6981312 1.2217287" class="leg_joint_param"/>
+            <geom type="mesh" mesh="RF_Knee_link"/>
+            <site name="RF_foot_site" pos="0.11 -0.19 0.016" size="0.01"/>
+            <geom name="RF_foot_visual" type="mesh" mesh="RF_Foot_link" pos="0.11 -0.19 0.016" quat="0.707 -0.707 0 0"
+                  contype="0" conaffinity="0" group="1"/>
+            <geom name="RF_foot_collision" class="foot_collision" pos="0.11 -0.19 0.016" rgba="0 0 0 0"/>
+          </body>
+        </body>
+      </body>
+
+      <body name="RR_HipA_link" pos="-0.16 -0.0675 0.063" quat="0.5 0.5 -0.5 -0.5">
+        <inertial pos="0.002621 0.000052 0.046852" mass="0.452382" fullinertia="0.00055866874 0.000347032635 0.000308951038 0.000000341744 -0.000000708495 -0.000000091476"/>
+        <joint name="RR_HipA_joint" axis="0 0 1" range="-0.7853982 0.7853982" class="leg_joint_param"/>
+        <geom type="mesh" mesh="RR_HipA_link"/>
+
+        <body name="RR_HipF_link" pos="0.018 0 0.048" quat="0.707 0 0.707 0">
+          <inertial pos="-0.033246 -0.01694 0.050217" mass="0.779164" fullinertia="0.001595827327 0.00326915934 0.004329611254 -0.001503634909 0.000443182676 0.000223603548"/>
+          <joint name="RR_HipF_joint" axis="0 0 1" range="-0.8726999 1.2217305" class="leg_joint_param"/>
+          <geom type="mesh" mesh="RR_HipF_link"/>
+
+          <body name="RR_Knee_link" pos="-0.1707 -0.1222 0.05">
+            <inertial pos="0.055107 -0.080197 0.016485" mass="0.121558" fullinertia="0.000549292448 0.000223695708 0.000769619177 0.000333360171 -0.000000107893 0.000000188213"/>
+            <joint name="RR_Knee_joint" axis="0 0 1" range="-0.6981312 1.2217287" class="leg_joint_param"/>
+            <geom type="mesh" mesh="RR_Knee_link"/>
+            <site name="RR_foot_site" pos="0.11 -0.19 0.016" size="0.01"/>
+            <geom name="RR_foot_visual" type="mesh" mesh="RR_Foot_link" pos="0.11 -0.19 0.016" quat="0.707 -0.707 0 0"
+                  contype="0" conaffinity="0" group="1"/>
+            <geom name="RR_foot_collision" class="foot_collision" pos="0.11 -0.19 0.016" rgba="0 0 0 0"/>
+          </body>
+        </body>
+      </body>
+    </body>
+  </worldbody>
+
+  <actuator>
+    <motor name="LF_HipA" joint="LF_HipA_joint" gear="1" ctrllimited="true" ctrlrange="-17 17"/>
+    <motor name="LF_HipF" joint="LF_HipF_joint" gear="1" ctrllimited="true" ctrlrange="-17 17"/>
+    <motor name="LF_Knee" joint="LF_Knee_joint" gear="1" ctrllimited="true" ctrlrange="-25 25"/>
+
+    <motor name="LR_HipA" joint="LR_HipA_joint" gear="1" ctrllimited="true" ctrlrange="-17 17"/>
+    <motor name="LR_HipF" joint="LR_HipF_joint" gear="1" ctrllimited="true" ctrlrange="-17 17"/>
+    <motor name="LR_Knee" joint="LR_Knee_joint" gear="1" ctrllimited="true" ctrlrange="-25 25"/>
+
+    <motor name="RF_HipA" joint="RF_HipA_joint" gear="1" ctrllimited="true" ctrlrange="-17 17"/>
+    <motor name="RF_HipF" joint="RF_HipF_joint" gear="1" ctrllimited="true" ctrlrange="-17 17"/>
+    <motor name="RF_Knee" joint="RF_Knee_joint" gear="1" ctrllimited="true" ctrlrange="-25 25"/>
+
+    <motor name="RR_HipA" joint="RR_HipA_joint" gear="1" ctrllimited="true" ctrlrange="-17 17"/>
+    <motor name="RR_HipF" joint="RR_HipF_joint" gear="1" ctrllimited="true" ctrlrange="-17 17"/>
+    <motor name="RR_Knee" joint="RR_Knee_joint" gear="1" ctrllimited="true" ctrlrange="-25 25"/>
+  </actuator>
+
+  <sensor>
+    <jointpos name="LF_HipA_pos" joint="LF_HipA_joint"/>
+    <jointpos name="LF_HipF_pos" joint="LF_HipF_joint"/>
+    <jointpos name="LF_Knee_pos" joint="LF_Knee_joint"/>
+    <jointpos name="LR_HipA_pos" joint="LR_HipA_joint"/>
+    <jointpos name="LR_HipF_pos" joint="LR_HipF_joint"/>
+    <jointpos name="LR_Knee_pos" joint="LR_Knee_joint"/>
+    <jointpos name="RF_HipA_pos" joint="RF_HipA_joint"/>
+    <jointpos name="RF_HipF_pos" joint="RF_HipF_joint"/>
+    <jointpos name="RF_Knee_pos" joint="RF_Knee_joint"/>
+    <jointpos name="RR_HipA_pos" joint="RR_HipA_joint"/>
+    <jointpos name="RR_HipF_pos" joint="RR_HipF_joint"/>
+    <jointpos name="RR_Knee_pos" joint="RR_Knee_joint"/>
+
+    <jointvel name="LF_HipA_vel" joint="LF_HipA_joint"/>
+    <jointvel name="LF_HipF_vel" joint="LF_HipF_joint"/>
+    <jointvel name="LF_Knee_vel" joint="LF_Knee_joint"/>
+    <jointvel name="LR_HipA_vel" joint="LR_HipA_joint"/>
+    <jointvel name="LR_HipF_vel" joint="LR_HipF_joint"/>
+    <jointvel name="LR_Knee_vel" joint="LR_Knee_joint"/>
+    <jointvel name="RF_HipA_vel" joint="RF_HipA_joint"/>
+    <jointvel name="RF_HipF_vel" joint="RF_HipF_joint"/>
+    <jointvel name="RF_Knee_vel" joint="RF_Knee_joint"/>
+    <jointvel name="RR_HipA_vel" joint="RR_HipA_joint"/>
+    <jointvel name="RR_HipF_vel" joint="RR_HipF_joint"/>
+    <jointvel name="RR_Knee_vel" joint="RR_Knee_joint"/>
+
+    <jointactuatorfrc name="LF_HipA_torque" joint="LF_HipA_joint"/>
+    <jointactuatorfrc name="LF_HipF_torque" joint="LF_HipF_joint"/>
+    <jointactuatorfrc name="LF_Knee_torque" joint="LF_Knee_joint"/>
+    <jointactuatorfrc name="LR_HipA_torque" joint="LR_HipA_joint"/>
+    <jointactuatorfrc name="LR_HipF_torque" joint="LR_HipF_joint"/>
+    <jointactuatorfrc name="LR_Knee_torque" joint="LR_Knee_joint"/>
+    <jointactuatorfrc name="RF_HipA_torque" joint="RF_HipA_joint"/>
+    <jointactuatorfrc name="RF_HipF_torque" joint="RF_HipF_joint"/>
+    <jointactuatorfrc name="RF_Knee_torque" joint="RF_Knee_joint"/>
+    <jointactuatorfrc name="RR_HipA_torque" joint="RR_HipA_joint"/>
+    <jointactuatorfrc name="RR_HipF_torque" joint="RR_HipF_joint"/>
+    <jointactuatorfrc name="RR_Knee_torque" joint="RR_Knee_joint"/>
+
+    <framequat name="orientation" objtype="site" objname="imu"/>
+    <gyro name="angular-velocity" site="imu"/>
+    <accelerometer name="linear-acceleration" site="imu"/>
+    <framepos name="position" objtype="site" objname="imu"/>
+  </sensor>
+</mujoco>

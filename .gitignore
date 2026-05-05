@@ -1,0 +1,7 @@
+build/
+*.pt
+*.onnx
+lib/mujoco
+lib/libtorch
+lib/onnxruntime
+motion_loader/
