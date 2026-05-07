@@ -20,24 +20,6 @@ set(SYSTEM_TYPE ${CMAKE_SYSTEM_NAME})
 # ========================
 set(INFERENCE_RUNTIME_DIR "${PROJECT_ROOT_DIR}/lib")
 
-# LibTorch
-set(USE_TORCH "OFF")
-set(LIBTORCH_DIR "${INFERENCE_RUNTIME_DIR}/libtorch")
-if(EXISTS "${LIBTORCH_DIR}/include" AND EXISTS "${LIBTORCH_DIR}/lib")
-    set(USE_TORCH "ON")
-    add_compile_definitions(USE_TORCH)
-    set(CMAKE_PREFIX_PATH "${LIBTORCH_DIR};${CMAKE_PREFIX_PATH}")
-    find_package(Torch QUIET)
-    if(Torch_FOUND)
-        message(STATUS "LibTorch: ${LIBTORCH_DIR} (v${Torch_VERSION})")
-    else()
-        set(USE_TORCH "OFF")
-        message(WARNING "LibTorch find_package failed")
-    endif()
-else()
-    message(WARNING "LibTorch not found at ${LIBTORCH_DIR}")
-endif()
-
 # ONNX Runtime
 set(USE_ONNX "OFF")
 set(ONNX_RUNTIME_LIB "")
@@ -67,8 +49,8 @@ else()
     message(STATUS "ONNX Runtime not found (optional)")
 endif()
 
-if(NOT USE_TORCH AND NOT USE_ONNX)
-    message(FATAL_ERROR "No inference backend found. Need LibTorch or ONNX Runtime.")
+if(NOT USE_ONNX)
+    message(FATAL_ERROR "No inference backend found. Need ONNX Runtime.")
 endif()
 
 # RPATH
@@ -76,9 +58,6 @@ set(CMAKE_SKIP_BUILD_RPATH FALSE)
 set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH FALSE)
 set(PREBUILT_LIB_PATHS "")
-if(USE_TORCH)
-    list(APPEND PREBUILT_LIB_PATHS "${LIBTORCH_DIR}/lib")
-endif()
 if(USE_ONNX)
     list(APPEND PREBUILT_LIB_PATHS "${ONNX_RUNTIME_DIR}/lib")
 endif()
@@ -134,10 +113,6 @@ target_include_directories(rl_sdk_lib PUBLIC
 target_link_libraries(rl_sdk_lib PUBLIC
     Threads::Threads TBB::tbb ${YAML_CPP_LIBRARIES}
 )
-if(USE_TORCH)
-    target_include_directories(rl_sdk_lib PUBLIC ${TORCH_INCLUDE_DIRS})
-    target_link_libraries(rl_sdk_lib PUBLIC ${TORCH_LIBRARIES})
-endif()
 if(USE_ONNX)
     target_include_directories(rl_sdk_lib PUBLIC ${ONNX_RUNTIME_DIR}/include)
     target_link_libraries(rl_sdk_lib PUBLIC ${ONNX_RUNTIME_LIB})
@@ -170,16 +145,12 @@ target_link_libraries(dogv2_mujoco
     glfw
 )
 
-if(USE_TORCH)
-    target_link_libraries(dogv2_mujoco ${TORCH_LIBRARIES})
-endif()
 if(USE_ONNX)
     target_link_libraries(dogv2_mujoco ${ONNX_RUNTIME_LIB})
 endif()
 
 message(STATUS "")
 message(STATUS "=== dogv2_mujoco ===")
-message(STATUS "  Torch: ${USE_TORCH}")
 message(STATUS "  ONNX:  ${USE_ONNX}")
 message(STATUS "  MuJoCo: ${MUJOCO_DIR}")
 message(STATUS "====================")

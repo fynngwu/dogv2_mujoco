@@ -289,8 +289,8 @@ int main(int argc, char **argv)
     std::string exe_dir = std::filesystem::canonical(std::filesystem::path(argv[0]).parent_path()).string();
     std::string base_dir = std::filesystem::canonical(exe_dir + "/../..").string();
 
-    std::string model_xml = base_dir + "/models/dog_v2_2_4.xml";
-    std::string config_yaml = base_dir + "/policy/cts/config.yaml";
+    std::string model_xml = base_dir + "/models/cross_stairs.xml";
+    std::string config_yaml = base_dir + "/policy/cts_onnx/config.yaml";
 
     if (argc >= 2)
     {
