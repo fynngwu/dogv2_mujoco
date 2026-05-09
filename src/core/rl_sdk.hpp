@@ -83,7 +83,6 @@ namespace Input
         Space, Enter, Escape,
         Up, Down, Left, Right
     };
-
     enum class Gamepad
     {
         None = 0,
@@ -102,6 +101,7 @@ struct Control
     float x = 0.0f;
     float y = 0.0f;
     float yaw = 0.0f;
+    float fixed_speed = 1.0f;
     bool navigation_mode = false;
 
     void SetKeyboard(Input::Keyboard keyboad)

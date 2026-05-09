@@ -40,7 +40,7 @@
   <worldbody>
     <light directional="true" diffuse=".4 .4 .4" pos="0 0 5.0" dir="0 0 -1"/>
 
-    <body name="base" pos="0 0 0.35">
+    <body name="base" pos="0 0 0.45">
       <freejoint name="floating_base" />
       <inertial pos="0.003073 -1.1e-05 0.058211" mass="5.276437" fullinertia="0.032842099924 0.103762167556 0.116538404566 3.336928e-05 -0.007254554244 3.335365e-05" />
       <site name="imu" size="0.01" pos="0 0 0" />
