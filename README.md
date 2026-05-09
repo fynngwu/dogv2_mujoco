@@ -42,9 +42,17 @@ policy/
 ├── cts/
 │   ├── config.yaml      # policy config
 │   └── dog_v2_cts.pt    # TorchScript model
+├── cts_onnx/
+│   └── policy.onnx      # ONNX model (auto-detected by extension)
 └── wtw/
     ├── config.yaml
     └── model.onnx        # ONNX model (auto-detected by extension)
+```
+
+### Sync Policy from Remote
+
+```bash
+rsync -avz wufy@100.108.115.42:~/projects/go2_rl_gym/logs/dog_v2_cts/exported/policies/policy.onnx policy/cts_onnx/policy.onnx
 ```
 
 Then run with policy name:
