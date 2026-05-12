@@ -530,6 +530,10 @@ void RLFSMState::RLControl()
                 fsm_command->motor_command.dq[i] = _output_dof_vel[i];
             }
             fsm_command->motor_command.kp[i] = rl.params.Get<std::vector<float>>("rl_kp")[i];
+            if (rl.params.Get<bool>("knee_kp_boost", false) && i % 3 == 2)
+            {
+                fsm_command->motor_command.kp[i] *= 2.78f;
+            }
             fsm_command->motor_command.kd[i] = rl.params.Get<std::vector<float>>("rl_kd")[i];
             fsm_command->motor_command.tau[i] = 0;
         }

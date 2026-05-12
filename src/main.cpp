@@ -2,6 +2,13 @@
 
 RL_Sim* RL_Sim::instance = nullptr;
 
+static const char* kJointNames[] = {
+    "FL_hip", "FL_thigh", "FL_knee",
+    "FR_hip", "FR_thigh", "FR_knee",
+    "RL_hip", "RL_thigh", "RL_knee",
+    "RR_hip", "RR_thigh", "RR_knee"
+};
+
 RL_Sim::RL_Sim(const std::string& model_xml, const std::string& config_yaml, const std::string& policy_dir_in)
 {
     instance = this;
@@ -114,12 +121,30 @@ void RL_Sim::SetCommand(const RobotCommand<float> *command)
 {
     if (mj_data)
     {
+        static int print_count = 0;
+        if (++print_count % 50 == 0)
+        {
+            printf("\033[2J\033[H");
+            printf("%-10s %10s %10s %10s %10s\n", "Joint", "TargetPos", "CurrentPos", "TargetTorque", "Kp");
+            printf("--------------------------------------------------------------------------------\n");
+        }
         for (int i = 0; i < this->params.Get<int>("num_of_dofs"); ++i)
         {
-            mj_data->ctrl[this->params.Get<std::vector<int>>("joint_mapping")[i]] =
+            int joint_idx = this->params.Get<std::vector<int>>("joint_mapping")[i];
+            float target_pos = command->motor_command.q[i];
+            float current_pos = mj_data->sensordata[joint_idx];
+            float target_torque =
                 command->motor_command.tau[i] +
-                command->motor_command.kp[i] * (command->motor_command.q[i] - mj_data->sensordata[this->params.Get<std::vector<int>>("joint_mapping")[i]]) +
-                command->motor_command.kd[i] * (command->motor_command.dq[i] - mj_data->sensordata[this->params.Get<std::vector<int>>("joint_mapping")[i] + this->params.Get<int>("num_of_dofs")]);
+                command->motor_command.kp[i] * (target_pos - current_pos) +
+                command->motor_command.kd[i] * (command->motor_command.dq[i] - mj_data->sensordata[joint_idx + this->params.Get<int>("num_of_dofs")]);
+
+            mj_data->ctrl[joint_idx] = target_torque;
+
+            if (print_count % 50 == 0)
+            {
+                printf("%-10s %10.4f %10.4f %10.4f %10.4f\n",
+                       kJointNames[i], target_pos, current_pos, target_torque, command->motor_command.kp[i]);
+            }
         }
     }
 }

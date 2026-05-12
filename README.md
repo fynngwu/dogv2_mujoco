@@ -82,6 +82,19 @@ params:
   # ... see policy/cts/config.yaml for full example
 ```
 
+### Joint Order
+
+12 joints are ordered by leg pairs, each with hip/thigh/knee:
+
+| Index | Leg   | Joint    |
+|-------|-------|----------|
+| 0-2   | FL (front-left)  | hip, thigh, knee |
+| 3-5   | FR (front-right) | hip, thigh, knee |
+| 6-8   | RL (rear-left)   | hip, thigh, knee |
+| 9-11  | RR (rear-right)  | hip, thigh, knee |
+
+To tune knee PD gains only, multiply indices 2, 5, 8, 11 by the desired factor.
+
 ## System Dependencies
 
 - CMake >= 3.10, C++17 compiler
