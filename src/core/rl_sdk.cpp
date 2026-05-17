@@ -171,6 +171,50 @@ void RL::InitControl()
     this->control.x = 0.0f;
     this->control.y = 0.0f;
     this->control.yaw = 0.0f;
+    this->current_goal_idx = 0;
+}
+
+void RL::SetGoalPositions(const std::vector<std::vector<float>>& goals)
+{
+    this->goal_positions = goals;
+    this->current_goal_idx = 0;
+}
+
+std::vector<float> RL::ComputeGoalCommand(const std::vector<float>& base_pos, const std::vector<float>& base_quat)
+{
+    if (this->goal_positions.empty())
+    {
+        return {this->control.x, this->control.y, this->control.yaw};
+    }
+
+    if (this->current_goal_idx >= static_cast<int>(this->goal_positions.size()))
+    {
+        this->current_goal_idx = static_cast<int>(this->goal_positions.size()) - 1;
+    }
+
+    const auto& goal = this->goal_positions[this->current_goal_idx];
+    float dx = goal[0] - base_pos[0];
+    float dy = goal[1] - base_pos[1];
+    float distance = std::sqrt(dx * dx + dy * dy);
+
+    if (distance < this->params.Get<float>("goal_reach_threshold", 0.2f) &&
+        this->current_goal_idx + 1 < static_cast<int>(this->goal_positions.size()))
+    {
+        this->current_goal_idx += 1;
+        dx = this->goal_positions[this->current_goal_idx][0] - base_pos[0];
+        dy = this->goal_positions[this->current_goal_idx][1] - base_pos[1];
+        distance = std::sqrt(dx * dx + dy * dy);
+    }
+
+    float target_yaw = std::atan2(dy, dx);
+    float yaw = QuaternionToEuler(base_quat)[2];
+    float delta_yaw = target_yaw - yaw;
+    const float pi = 3.14159265358979323846f;
+    while (delta_yaw > pi) delta_yaw -= 2.0f * pi;
+    while (delta_yaw < -pi) delta_yaw += 2.0f * pi;
+
+    float distance_obs = clamp(distance / this->params.Get<float>("goal_distance_range", 4.0f), 0.0f, 1.0f);
+    return {delta_yaw, distance_obs, this->params.Get<float>("goal_target_speed", 0.8f)};
 }
 
 void RL::InitJointNum(size_t num_joints)

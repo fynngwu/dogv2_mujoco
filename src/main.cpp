@@ -54,6 +54,7 @@ RL_Sim::RL_Sim(const std::string& model_xml, const std::string& config_yaml, con
     this->SetupSysJoystick("/dev/input/js0", 16);
 
     this->ReadYaml(config_yaml);
+    this->LoadGoalSites();
 
     this->policy_dir = policy_dir_in;
     this->InitJointNum(this->params.Get<int>("num_of_dofs"));
@@ -99,6 +100,10 @@ void RL_Sim::GetState(RobotState<float> *state)
 {
     if (mj_data)
     {
+        state->base_pos[0] = mj_data->qpos[0];
+        state->base_pos[1] = mj_data->qpos[1];
+        state->base_pos[2] = mj_data->qpos[2];
+
         state->imu.quaternion[0] = mj_data->sensordata[3 * this->params.Get<int>("num_of_dofs") + 0];
         state->imu.quaternion[1] = mj_data->sensordata[3 * this->params.Get<int>("num_of_dofs") + 1];
         state->imu.quaternion[2] = mj_data->sensordata[3 * this->params.Get<int>("num_of_dofs") + 2];
@@ -115,6 +120,33 @@ void RL_Sim::GetState(RobotState<float> *state)
             state->motor_state.tau_est[i] = mj_data->sensordata[this->params.Get<std::vector<int>>("joint_mapping")[i] + 2 * this->params.Get<int>("num_of_dofs")];
         }
     }
+}
+
+void RL_Sim::LoadGoalSites()
+{
+    if (!this->params.Has("goal_site_names"))
+    {
+        return;
+    }
+
+    mj_forward(this->mj_model, this->mj_data);
+
+    std::vector<std::vector<float>> goals;
+    for (const auto& name : this->params.Get<std::vector<std::string>>("goal_site_names"))
+    {
+        int site_id = mj_name2id(this->mj_model, mjOBJ_SITE, name.c_str());
+        if (site_id < 0)
+        {
+            std::cout << LOGGER::WARNING << "Goal site not found in XML: " << name << std::endl;
+            continue;
+        }
+        goals.push_back({
+            static_cast<float>(this->mj_data->site_xpos[3 * site_id + 0]),
+            static_cast<float>(this->mj_data->site_xpos[3 * site_id + 1]),
+            static_cast<float>(this->mj_data->site_xpos[3 * site_id + 2])
+        });
+    }
+    this->SetGoalPositions(goals);
 }
 
 void RL_Sim::SetCommand(const RobotCommand<float> *command)
@@ -247,7 +279,7 @@ void RL_Sim::RunModel()
     {
         this->episode_length_buf += 1;
         this->obs.ang_vel = this->robot_state.imu.gyroscope;
-        this->obs.commands = {this->control.x, this->control.y, this->control.yaw};
+        this->obs.commands = this->ComputeGoalCommand(this->robot_state.base_pos, this->robot_state.imu.quaternion);
         this->obs.base_quat = this->robot_state.imu.quaternion;
         this->obs.dof_pos = this->robot_state.motor_state.q;
         this->obs.dof_vel = this->robot_state.motor_state.dq;
@@ -334,6 +366,26 @@ int main(int argc, char **argv)
     }
 
     std::string policy_dir = std::filesystem::path(config_yaml).parent_path().string();
+    try
+    {
+        YAML::Node config = YAML::LoadFile(config_yaml);
+        if (config["params"] && config["params"]["model_xml"])
+        {
+            std::string config_model_xml = config["params"]["model_xml"].as<std::string>();
+            if (config_model_xml.find('/') == 0)
+            {
+                model_xml = config_model_xml;
+            }
+            else
+            {
+                model_xml = base_dir + "/" + config_model_xml;
+            }
+        }
+    }
+    catch (const YAML::Exception& e)
+    {
+        std::cout << LOGGER::WARNING << "Could not read model_xml from config: " << e.what() << std::endl;
+    }
 
     std::cout << LOGGER::INFO << "Model XML: " << model_xml << std::endl;
     std::cout << LOGGER::INFO << "Policy config: " << config_yaml << std::endl;

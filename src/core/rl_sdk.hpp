@@ -53,6 +53,8 @@ struct RobotState
         std::vector<T> accelerometer = {0.0f, 0.0f, 0.0f};
     } imu;
 
+    std::vector<T> base_pos = {0.0f, 0.0f, 0.0f};
+
     struct MotorState
     {
         std::vector<T> q;
@@ -204,11 +206,15 @@ public:
 
     Control control;
     void KeyboardInterface();
+    void SetGoalPositions(const std::vector<std::vector<float>>& goals);
+    std::vector<float> ComputeGoalCommand(const std::vector<float>& base_pos, const std::vector<float>& base_quat);
 
     ObservationBuffer history_obs_buf;
     std::vector<float> history_obs;
 
     int motiontime = 0;
+    int current_goal_idx = 0;
+    std::vector<std::vector<float>> goal_positions;
     std::string robot_name = "dog_v2_2_4";
     std::string config_name;
     std::string policy_dir;

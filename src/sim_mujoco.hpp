@@ -51,6 +51,7 @@ private:
     void SetCommand(const RobotCommand<float> *command) override;
     void RunModel();
     void RobotControl();
+    void LoadGoalSites();
 
     std::shared_ptr<LoopFunc> loop_keyboard;
     std::shared_ptr<LoopFunc> loop_joystick;

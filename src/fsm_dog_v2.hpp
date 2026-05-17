@@ -141,7 +141,7 @@ public:
     {
         if (!rl.rl_init_done) rl.rl_init_done = true;
 
-        std::cout << "\r\033[K" << std::flush << LOGGER::INFO << "RL [" << rl.config_name << "] x:" << rl.control.x << " y:" << rl.control.y << " yaw:" << rl.control.yaw << std::flush;
+        std::cout << "\r\033[K" << std::flush << LOGGER::INFO << "RL [" << rl.config_name << "] cmd:" << rl.obs.commands[0] << " " << rl.obs.commands[1] << " " << rl.obs.commands[2] << std::flush;
         RLControl();
     }
 
