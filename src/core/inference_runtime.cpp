@@ -190,7 +190,14 @@ std::vector<float> ONNXModel::forward(const std::vector<std::vector<float>>& inp
 
         // Get input (use first input only)
         const auto& input = inputs[0];
-        auto input_shape = session_->GetInputTypeInfo(0).GetTensorTypeAndShapeInfo().GetShape();
+        auto input_shape = input_shapes_[0];
+        // Replace dynamic dimensions with actual values
+        input_shape[0] = 1;
+        for (size_t i = 1; i < input_shape.size(); i++) {
+            if (input_shape[i] <= 0) {
+                input_shape[i] = static_cast<int64_t>(input.size());
+            }
+        }
 
         // Create input tensor
         auto input_tensor = Ort::Value::CreateTensor<float>(

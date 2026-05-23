@@ -31,7 +31,7 @@ if(EXISTS "${ONNX_RUNTIME_DIR}/include" AND EXISTS "${ONNX_RUNTIME_DIR}/lib")
     if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
         set(LIB_NAMES onnxruntime.lib)
     else()
-        set(LIB_NAMES onnxruntime.so onnxruntime.dylib libonnxruntime.so libonnxruntime.dylib)
+        set(LIB_NAMES onnxruntime.so onnxruntime.dylib libonnxruntime.so.1.19.2 libonnxruntime.so libonnxruntime.dylib)
     endif()
     find_library(ONNX_RUNTIME_LIB_PATH NAMES ${LIB_NAMES} PATHS "${ONNX_RUNTIME_DIR}/lib" NO_DEFAULT_PATH)
     if(ONNX_RUNTIME_LIB_PATH)
@@ -76,10 +76,10 @@ list(APPEND PREBUILT_LIB_PATHS "${MUJOCO_LIB_DIR}")
 set(CMAKE_INSTALL_RPATH "${PREBUILT_LIB_PATHS}")
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-    set(MUJOCO_LIB_NAME "libmujoco.so.3.2.7")
+    set(MUJOCO_LIB_NAME "libmujoco.so.3.8.1")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--disable-new-dtags")
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
-    set(MUJOCO_LIB_NAME "libmujoco.3.2.7.dylib")
+    set(MUJOCO_LIB_NAME "libmujoco.3.8.1.dylib")
 endif()
 
 add_library(mujoco_prebuilt SHARED IMPORTED)
@@ -124,14 +124,26 @@ endif()
 file(GLOB MUJOCO_SIMULATE_SRC thirdparty/mujoco_simulate/*.cc)
 set(JOYSTICK_SRC thirdparty/joystick/joystick.cc)
 
+# lodepng: header+implementation in one file
+add_library(lodepng_lib STATIC ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/mujoco_simulate/lodepng.cpp)
+target_include_directories(lodepng_lib PUBLIC thirdparty/mujoco_simulate)
+
 # ========================
 # Main executable
 # ========================
-add_executable(dogv2_mujoco
+set(MAIN_SRCS
     src/main.cpp
     ${MUJOCO_SIMULATE_SRC}
     ${JOYSTICK_SRC}
 )
+if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+    list(APPEND MAIN_SRCS
+        thirdparty/mujoco_simulate/macos_gui.mm
+        thirdparty/mujoco_simulate/glfw_corevideo.mm
+    )
+endif()
+
+add_executable(dogv2_mujoco ${MAIN_SRCS})
 target_include_directories(dogv2_mujoco PRIVATE
     src
     src/core
@@ -142,8 +154,20 @@ target_include_directories(dogv2_mujoco PRIVATE
 target_link_libraries(dogv2_mujoco
     rl_sdk_lib
     mujoco_prebuilt
+    lodepng_lib
     glfw
 )
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    find_package(OpenGL REQUIRED)
+    target_link_libraries(dogv2_mujoco OpenGL::GL)
+endif()
+if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+    target_link_libraries(dogv2_mujoco
+        "-framework CoreVideo"
+        "-framework AppKit"
+        "-framework Foundation"
+    )
+endif()
 
 if(USE_ONNX)
     target_link_libraries(dogv2_mujoco ${ONNX_RUNTIME_LIB})

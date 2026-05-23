@@ -5,7 +5,7 @@ cd "$(dirname "${BASH_SOURCE[0]}")/.."
 VERSION="1.19.2"
 INSTALL_DIR="lib/onnxruntime"
 
-if [ -d "$INSTALL_DIR/include/onnxruntime" ] || [ -d "$INSTALL_DIR/include/onnxruntime_c_api.h" ] || [ -f "$INSTALL_DIR/include/onnxruntime_c_api.h" ]; then
+if [ -d "$INSTALL_DIR/include/onnxruntime" ] || [ -f "$INSTALL_DIR/include/onnxruntime_c_api.h" ]; then
     echo "[OK] ONNX Runtime $VERSION already installed at $INSTALL_DIR"
     exit 0
 fi
@@ -15,12 +15,24 @@ TMPDIR=$(mktemp -d)
 trap "rm -rf $TMPDIR" EXIT
 
 ARCH=$(uname -m)
-if [ "$ARCH" = "x86_64" ]; then
-    PLATFORM="linux-x64"
-elif [ "$ARCH" = "aarch64" ]; then
-    PLATFORM="linux-aarch64"
+OS=$(uname -s)
+if [ "$OS" = "Darwin" ]; then
+    if [ "$ARCH" = "arm64" ]; then
+        PLATFORM="osx-arm64"
+    else
+        PLATFORM="osx-x86_64"
+    fi
+elif [ "$OS" = "Linux" ]; then
+    if [ "$ARCH" = "x86_64" ]; then
+        PLATFORM="linux-x64"
+    elif [ "$ARCH" = "aarch64" ]; then
+        PLATFORM="linux-aarch64"
+    else
+        echo "Unsupported Linux architecture: $ARCH"
+        exit 1
+    fi
 else
-    echo "Unsupported architecture: $ARCH"
+    echo "Unsupported OS: $OS"
     exit 1
 fi
 

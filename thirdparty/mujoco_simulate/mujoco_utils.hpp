@@ -393,9 +393,6 @@ void PhysicsLoop(mj::Simulate& sim) {
                 measured = true;
               }
 
-              // inject noise
-              sim.InjectNoise();
-
               // call mj_step
               mj_step(m, d);
               const char* message = Diverged(m->opt.disableflags, d);
