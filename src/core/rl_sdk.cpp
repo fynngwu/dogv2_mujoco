@@ -487,6 +487,27 @@ void RL::KeyboardInterface()
         } break;
         default:  break;
         }
+
+        // Gait preset switching (consumed here, not passed to StateController)
+        switch (c)
+        {
+        case 't': case 'T':
+            this->control.gait_preset = Control::GaitPreset::Trot;
+            printf("Gait: Trot (phase=0.5, offset=0, bound=0)\n");
+            break;
+        case 'y': case 'Y':
+            this->control.gait_preset = Control::GaitPreset::Pace;
+            printf("Gait: Pace (phase=0, offset=0.5, bound=0)\n");
+            break;
+        case 'b': case 'B':
+            this->control.gait_preset = Control::GaitPreset::Bound;
+            printf("Gait: Bound (phase=0, offset=0, bound=0.5)\n");
+            break;
+        case 'u': case 'U':
+            this->control.gait_preset = Control::GaitPreset::Pronk;
+            printf("Gait: Pronk (phase=0.5, offset=0.5, bound=0.5)\n");
+            break;
+        }
     }
 }
 

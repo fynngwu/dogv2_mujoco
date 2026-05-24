@@ -108,6 +108,9 @@ struct Control
     float fixed_speed = 1.0f;
     bool navigation_mode = false;
 
+    enum class GaitPreset { Trot, Pace, Bound, Pronk };
+    GaitPreset gait_preset = GaitPreset::Trot;
+
     void SetKeyboard(Input::Keyboard keyboad)
     {
         if (current_keyboard != keyboad)

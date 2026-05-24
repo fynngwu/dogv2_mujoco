@@ -449,6 +449,20 @@ void RL_Sim::RunModel()
                 this->obs.commands[i] = defaults[i];
         }
 
+        // Apply gait preset (phase/offset/bound)
+        if (this->obs.commands.size() > 7) {
+            switch (this->control.gait_preset) {
+            case Control::GaitPreset::Trot:
+                this->obs.commands[5] = 0.5f; this->obs.commands[6] = 0.0f; this->obs.commands[7] = 0.0f; break;
+            case Control::GaitPreset::Pace:
+                this->obs.commands[5] = 0.0f; this->obs.commands[6] = 0.5f; this->obs.commands[7] = 0.0f; break;
+            case Control::GaitPreset::Bound:
+                this->obs.commands[5] = 0.0f; this->obs.commands[6] = 0.0f; this->obs.commands[7] = 0.5f; break;
+            case Control::GaitPreset::Pronk:
+                this->obs.commands[5] = 0.5f; this->obs.commands[6] = 0.5f; this->obs.commands[7] = 0.5f; break;
+            }
+        }
+
         if (this->params.Has("commands_clip_lower") && this->params.Has("commands_clip_upper"))
         {
             auto clip_lower = this->params.Get<std::vector<float>>("commands_clip_lower");
