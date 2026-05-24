@@ -68,6 +68,28 @@ RL_Sim::RL_Sim(const std::string& model_xml, const std::string& config_yaml, con
     fsm_ptr->AddState(std::make_shared<dog_v2_fsm::RLFSMStateRLLocomotion>(this));
     fsm_ptr->SetInitialState("RLFSMStatePassive");
     this->fsm = *fsm_ptr;
+    this->fsm.RequestStateChange("RLFSMStateGetUp");
+
+    std::string policies_root = std::filesystem::path(this->policy_dir).parent_path().string();
+    this->ScanPolicyConfigs(policies_root);
+
+    std::cout << LOGGER::INFO << "Available policies:" << std::endl;
+    for (size_t i = 0; i < this->policy_config_dirs.size(); ++i)
+    {
+        std::cout << "  [" << (i + 1) << "] " << this->policy_config_dirs[i] << std::endl;
+    }
+
+    std::string current_policy_name = std::filesystem::path(this->policy_dir).filename().string();
+    this->current_config_idx = 0;
+    for (size_t i = 0; i < this->policy_config_dirs.size(); ++i)
+    {
+        if (this->policy_config_dirs[i] == current_policy_name)
+        {
+            this->current_config_idx = i;
+            break;
+        }
+    }
+    this->config_name = this->policy_config_dirs[this->current_config_idx];
 
     this->loop_control = std::make_shared<LoopFunc>("loop_control", this->params.Get<float>("dt"), std::bind(&RL_Sim::RobotControl, this));
     this->loop_rl = std::make_shared<LoopFunc>("loop_rl", this->params.Get<float>("dt") * this->params.Get<int>("decimation"), std::bind(&RL_Sim::RunModel, this));
@@ -81,7 +103,7 @@ RL_Sim::RL_Sim(const std::string& model_xml, const std::string& config_yaml, con
     this->loop_joystick->start();
 
     std::cout << LOGGER::INFO << "RL_Sim start" << std::endl;
-    std::cout << LOGGER::INFO << "Keys: 0=GetUp  1=RL  9=GetDown  P=Passive  W/S/A/D/Q/E=Move  Space=Stop  R=Reset  Enter=Pause" << std::endl;
+    std::cout << LOGGER::INFO << "Keys: 0=GetUp  9=GetDown  P=Passive  W/S/A/D/Q/E=Move  Space=Stop  R=Reset  L=Record  Enter=Pause  1-9=Switch policy" << std::endl;
 
     sim->RenderLoop();
 }
@@ -93,6 +115,8 @@ RL_Sim::~RL_Sim()
     this->loop_joystick->shutdown();
     this->loop_control->shutdown();
     this->loop_rl->shutdown();
+    if (record_file.is_open())
+        record_file.close();
     std::cout << LOGGER::INFO << "RL_Sim exit" << std::endl;
 }
 
@@ -157,6 +181,20 @@ void RL_Sim::SetCommand(const RobotCommand<float> *command)
         if (++print_count % 50 == 0)
         {
             printf("\033[2J\033[H");
+            printf("Status: %s  |  Speed: %.2f  |  Steps: %d  |  Policy: [%d] %s\n",
+                   this->recording ? "RECORDING" : "idle",
+                   this->control.fixed_speed,
+                   this->record_step,
+                   this->current_config_idx + 1,
+                   this->config_name.c_str());
+            printf("\n");
+            printf("Keys: 0=GetUp  9=GetDown  P=Passive  W/S/A/D/Q/E=Move  Space=Stop  R=Reset  L=Record  Enter=Pause\n");
+            printf("Policies:");
+            for (size_t i = 0; i < this->policy_config_dirs.size(); ++i)
+            {
+                printf(" %zu=%s", i + 1, this->policy_config_dirs[i].c_str());
+            }
+            printf("\n\n");
             printf("%-10s %10s %10s %10s %10s\n", "Joint", "TargetPos", "CurrentPos", "TargetTorque", "Kp");
             printf("--------------------------------------------------------------------------------\n");
         }
@@ -186,6 +224,29 @@ void RL_Sim::RobotControl()
     const std::lock_guard<std::recursive_mutex> lock(sim->mtx);
 
     this->GetState(&this->robot_state);
+
+    // Check for policy config switch keys (intercept before FSM processes them)
+    int new_config_idx = -1;
+    switch (this->control.current_keyboard)
+    {
+    case Input::Keyboard::Num1: new_config_idx = 0; break;
+    case Input::Keyboard::Num2: new_config_idx = 1; break;
+    case Input::Keyboard::Num3: new_config_idx = 2; break;
+    case Input::Keyboard::Num4: new_config_idx = 3; break;
+    case Input::Keyboard::Num5: new_config_idx = 4; break;
+    case Input::Keyboard::Num6: new_config_idx = 5; break;
+    case Input::Keyboard::Num7: new_config_idx = 6; break;
+    case Input::Keyboard::Num8: new_config_idx = 7; break;
+    case Input::Keyboard::Num9: new_config_idx = 8; break;
+    default: break;
+    }
+    if (new_config_idx >= 0 && new_config_idx < (int)this->policy_config_dirs.size())
+    {
+        this->SwitchPolicyConfig(new_config_idx);
+        this->control.current_keyboard = Input::Keyboard::None;
+        this->control.last_keyboard = Input::Keyboard::None;
+    }
+
     this->StateController(&this->robot_state, &this->robot_command);
 
     if (this->control.current_keyboard == Input::Keyboard::R)
@@ -196,6 +257,49 @@ void RL_Sim::RobotControl()
             mj_forward(this->mj_model, this->mj_data);
         }
     }
+
+    if (this->control.current_keyboard == Input::Keyboard::L)
+    {
+        this->recording = !this->recording;
+        if (this->recording)
+        {
+            auto now = std::chrono::system_clock::now();
+            auto tt = std::chrono::system_clock::to_time_t(now);
+            std::stringstream ss;
+            ss << "records/record_" << std::put_time(std::localtime(&tt), "%Y%m%d_%H%M%S") << ".csv";
+
+            auto dir = std::filesystem::path("records");
+            if (!std::filesystem::exists(dir))
+                std::filesystem::create_directory(dir);
+
+            record_file.open(ss.str());
+            int n = this->params.Get<int>("num_of_dofs");
+            record_file << "step";
+            for (int i = 0; i < n; ++i) record_file << ",dof_pos_" << i;
+            for (int i = 0; i < n; ++i) record_file << ",target_dof_pos_" << i;
+            record_file << "\n";
+
+            record_step = 0;
+            std::cout << LOGGER::INFO << "Recording started: " << ss.str() << std::endl;
+        }
+        else
+        {
+            if (record_file.is_open())
+                record_file.close();
+            std::cout << LOGGER::INFO << "Recording stopped (" << record_step << " steps)" << std::endl;
+        }
+    }
+
+    if (this->recording && record_file.is_open())
+    {
+        int n = this->params.Get<int>("num_of_dofs");
+        record_file << record_step;
+        for (int i = 0; i < n; ++i) record_file << "," << this->robot_state.motor_state.q[i];
+        for (int i = 0; i < n; ++i) record_file << "," << this->robot_command.motor_command.q[i];
+        record_file << "\n";
+        record_step++;
+    }
+
     if (this->control.current_keyboard == Input::Keyboard::Enter)
     {
         if (simulation_running)
@@ -271,6 +375,56 @@ void RL_Sim::GetSysJoystick()
         this->control.yaw = 0.0f;
         this->sys_js_active = false;
     }
+}
+
+void RL_Sim::ScanPolicyConfigs(const std::string& policies_root)
+{
+    policy_config_dirs.clear();
+    if (!std::filesystem::exists(policies_root)) return;
+    for (const auto& entry : std::filesystem::directory_iterator(policies_root))
+    {
+        if (entry.is_directory())
+        {
+            std::string config_path = entry.path().string() + "/config.yaml";
+            if (std::filesystem::exists(config_path))
+            {
+                policy_config_dirs.push_back(entry.path().filename().string());
+            }
+        }
+    }
+    std::sort(policy_config_dirs.begin(), policy_config_dirs.end());
+}
+
+void RL_Sim::SwitchPolicyConfig(int index)
+{
+    if (index < 0 || index >= (int)policy_config_dirs.size())
+        return;
+
+    if (index == this->current_config_idx && this->rl_init_done)
+        return;
+
+    if (index != this->current_config_idx)
+    {
+        std::string policies_root = std::filesystem::path(this->policy_dir).parent_path().string();
+        this->policy_dir = policies_root + "/" + policy_config_dirs[index];
+        this->config_name = policy_config_dirs[index];
+        this->current_config_idx = index;
+
+        std::string config_yaml = this->policy_dir + "/config.yaml";
+        this->ReadYaml(config_yaml);
+
+        if (this->mj_model && this->mj_data)
+        {
+            mj_resetData(this->mj_model, this->mj_data);
+            mj_forward(this->mj_model, this->mj_data);
+        }
+
+        this->rl_init_done = false;
+        std::cout << std::endl << LOGGER::INFO << "Switched to policy: [" << (index + 1) << "] " << policy_config_dirs[index] << std::endl;
+    }
+
+    this->pending_rl_switch = true;
+    this->fsm.RequestStateChange("RLFSMStateGetUp");
 }
 
 void RL_Sim::RunModel()

@@ -1,0 +1,9 @@
+[project]
+name = "dogv2-mujoco"
+version = "0.1.0"
+description = "Add your description here"
+requires-python = ">=3.12.3"
+dependencies = [
+    "matplotlib>=3.10.9",
+    "pandas>=3.0.3",
+]

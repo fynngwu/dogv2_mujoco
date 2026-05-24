@@ -23,7 +23,7 @@ bash run.sh
 | Key | Action |
 |-----|--------|
 | `0` | Stand up (GetUp) |
-| `1` | RL locomotion |
+| `1` `2` `3`... | Switch policy config (auto-detected from `policy/` dirs) |
 | `9` | Lie down (GetDown) |
 | `P` | Passive mode |
 | `W/S` | Forward / Backward |
@@ -31,35 +31,62 @@ bash run.sh
 | `Q/E` | Turn left / Turn right |
 | `Space` | Stop all movement |
 | `R` | Reset simulation |
+| `L` | Toggle recording (starts/stops CSV log) |
 | `Enter` | Pause / Resume |
+
+> The robot auto-stands on startup. Press a policy number key (e.g. `1`) to enter RL locomotion.
 
 ## Switch Policies
 
-Place your policy files under `policy/<name>/`:
+Policy configs are auto-detected from `policy/*/config.yaml` at startup:
 
 ```
-policy/
-├── cts/
-│   ├── config.yaml      # policy config
-│   └── dog_v2_cts.pt    # TorchScript model
-├── cts_onnx/
-│   └── policy.onnx      # ONNX model (auto-detected by extension)
-└── wtw/
-    ├── config.yaml
-    └── model.onnx        # ONNX model (auto-detected by extension)
+[1] cts_onnx
+[2] dreamwaq_onnx
+[3] parkour_hurdle_onnx
 ```
 
-### Sync Policy from Remote
+Press the number key to switch config and enter RL mode. The simulation resets and
+the robot stands up using the new config automatically.
+
+### Recording
+
+Press `L` to start recording joint data (dof_pos + target_dof_pos, all 12 joints).
+Press `L` again to stop. The data is written to `records/record_<timestamp>.csv`.
+
+```csv
+step,dof_pos_0,...,dof_pos_11,target_dof_pos_0,...,target_dof_pos_11
+0,0.0451,...,-0.0387,-0.0717,...,0.1523
+```
+
+The real-time terminal display shows recording status and steps:
+
+```
+Status: RECORDING  |  Speed: 1.00  |  Steps: 542  |  Policy: [1] cts_onnx
+```
+
+### Plotting
+
+Requires Python 3.12+ with [uv](https://docs.astral.sh/uv/). Run once:
 
 ```bash
-rsync -avz wufy@100.108.115.42:~/projects/go2_rl_gym/logs/dog_v2_cts/exported/policies/policy.onnx policy/cts_onnx/policy.onnx
+uv add pandas matplotlib
 ```
 
-Then run with policy name:
+Plot the latest recording:
 
 ```bash
-./run.sh policy/wtw/config.yaml
+uv run python plot_record.py
 ```
+
+Or plot a specific file:
+
+```bash
+uv run python plot_record.py records/record_20250101_120000.csv
+```
+
+This opens a 4×3 subplot figure showing dof_pos (solid) vs target_dof_pos (dashed)
+for each of the 12 joints.
 
 ### Config YAML
 
@@ -121,6 +148,10 @@ dogv2_mujoco/
 ├── thirdparty/           # MuJoCo viewer + joystick
 ├── models/               # MuJoCo XML + STL meshes
 ├── policy/               # YAML config + model weights
+├── records/              # recorded CSV data (gitignored)
+├── plot_record.py        # plot recordings
+├── pyproject.toml        # Python dependencies (uv)
+├── uv.lock
 └── lib/                  # prebuilt MuJoCo + LibTorch (downloaded)
 ```
 

@@ -16,6 +16,9 @@
 #include <fstream>
 #include <stdexcept>
 #include <memory>
+#include <iomanip>
+#include <sstream>
+#include <ctime>
 
 #include <mujoco/mujoco.h>
 #include "joystick.hh"
@@ -70,6 +73,14 @@ private:
     int sys_js_max_value = (1 << (16 - 1));
     void SetupSysJoystick(const std::string& device, int bits);
     void GetSysJoystick();
+
+    bool recording = false;
+    std::ofstream record_file;
+    int record_step = 0;
+
+    std::vector<std::string> policy_config_dirs;
+    void ScanPolicyConfigs(const std::string& policies_root);
+    void SwitchPolicyConfig(int index);
 };
 
 #endif // SIM_MUJOCO_HPP

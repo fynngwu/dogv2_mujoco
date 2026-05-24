@@ -5,3 +5,6 @@ lib/mujoco
 lib/libtorch
 lib/onnxruntime
 motion_loader/
+records/
+.python-version
+uv.lock

@@ -68,11 +68,12 @@ public:
         }
         if (percent_getup >= 1.0f)
         {
-            if (rl.control.current_keyboard == Input::Keyboard::Num1)
+            if (rl.pending_rl_switch)
             {
+                rl.pending_rl_switch = false;
                 return "RLFSMStateRLLocomotion";
             }
-            else if (rl.control.current_keyboard == Input::Keyboard::Num9)
+            if (rl.control.current_keyboard == Input::Keyboard::Num9)
             {
                 return "RLFSMStateGetDown";
             }

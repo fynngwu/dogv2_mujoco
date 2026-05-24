@@ -53,7 +53,7 @@
         <geom name="FL_hip" type="mesh" mesh="LF_HipA_link" rgba="0.752941176470588 0.752941176470588 0.752941176470588 1" group="1" />
         <body name="FL_thigh" pos="0.018001 0 0.048001" quat="0.707105482511236 0 0.707108079859474 0">
           <inertial pos="0.033261 -0.016881 0.050217" mass="0.779164" fullinertia="0.001597433226 0.003268376129 0.004330433943 0.001505087455 -0.000442930553 0.000224661879" />
-          <joint name="FL_thigh_joint" axis="0 0 1" range="-1.2217658 0.8726683" class="leg_joint_param" />
+          <joint name="FL_thigh_joint" axis="0 0 1" range="-1.2217658 1.2217658" class="leg_joint_param" />
           <geom name="FL_thigh" type="mesh" mesh="LF_HipF_link" rgba="0.752941176470588 0.752941176470588 0.752941176470588 1" group="1" />
           <body name="FL_calf" pos="0.170743431939306 -0.122257424197791 0.0500000000000068">
             <inertial pos="-0.055107 -0.080197 0.016515" mass="0.121558" fullinertia="0.000549292448 0.000223695708 0.000769619177 -0.000333360171 -1.07893e-07 -1.88213e-07" />
@@ -72,7 +72,7 @@
         <geom name="FR_hip" type="mesh" mesh="RF_HipA_link" rgba="0.752941176470588 0.752941176470588 0.752941176470588 1" group="1" />
         <body name="FR_thigh" pos="-0.018001 0 0.048001" quat="0.707105482511236 0 -0.707108079859474 0">
           <inertial pos="-0.033247 -0.016939 0.050217" mass="0.779164" fullinertia="0.001595827327 0.00326915934 0.004329611254 -0.001503634909 0.000443182676 0.000223603548" />
-          <joint name="FR_thigh_joint" axis="0 0 1" range="-0.8726999 1.2217342" class="leg_joint_param" />
+          <joint name="FR_thigh_joint" axis="0 0 1" range="-1.2217342 1.2217342" class="leg_joint_param" />
           <geom name="FR_thigh" type="mesh" mesh="RF_HipF_link" rgba="0.898039215686275 0.917647058823529 0.929411764705882 1" group="1" />
           <body name="FR_calf" pos="-0.17074 -0.12226 0.05">
             <inertial pos="0.055107 -0.080197 0.016485" mass="0.121558" fullinertia="0.000549292448 0.000223695708 0.000769619177 0.000333360171 -1.07893e-07 1.88213e-07" />
@@ -91,7 +91,7 @@
         <geom name="RL_hip" type="mesh" mesh="LR_HipA_link" rgba="0.752941176470588 0.752941176470588 0.752941176470588 1" group="1" />
         <body name="RL_thigh" pos="-0.018001 0 0.048001" quat="0.707105482511236 0 -0.707108079859474 0">
           <inertial pos="0.03326 -0.016881 0.050217" mass="0.779164" fullinertia="0.001597433226 0.003268376129 0.004330433943 0.001505087455 -0.000442930553 0.000224661879" />
-          <joint name="RL_thigh_joint" axis="0 0 1" range="-1.2217305 0.8726683" class="leg_joint_param" />
+          <joint name="RL_thigh_joint" axis="0 0 1" range="-1.2217305 1.2217305" class="leg_joint_param" />
           <geom name="RL_thigh" type="mesh" mesh="LR_HipF_link" rgba="0.752941176470588 0.752941176470588 0.752941176470588 1" group="1" />
           <body name="RL_calf" pos="0.17074234647718 -0.122257326153361 0.050000000000001">
             <inertial pos="-0.055107 -0.080197 0.016515" mass="0.121558" fullinertia="0.000549292448 0.000223695708 0.000769619177 -0.000333360171 -1.07893e-07 -1.88213e-07" />
@@ -110,7 +110,7 @@
         <geom name="RR_hip" type="mesh" mesh="RR_HipA_link" rgba="1 1 1 1" group="1" />
         <body name="RR_thigh" pos="0.018001 0 0.048001" quat="0.707105482511236 0 0.707108079859474 0">
           <inertial pos="-0.033246 -0.01694 0.050217" mass="0.779164" fullinertia="0.001595827327 0.00326915934 0.004329611254 -0.001503634909 0.000443182676 0.000223603548" />
-          <joint name="RR_thigh_joint" axis="0 0 1" range="-0.8726999 1.2217305" class="leg_joint_param" />
+          <joint name="RR_thigh_joint" axis="0 0 1" range="-1.2217305 1.2217305" class="leg_joint_param" />
           <geom name="RR_thigh" type="mesh" mesh="RR_HipF_link" rgba="0.752941176470588 0.752941176470588 0.752941176470588 1" group="1" />
           <body name="RR_calf" pos="-0.170742346477182 -0.122257424197793 0.050000000000007">
             <inertial pos="0.055107 -0.080197 0.016485" mass="0.121558" fullinertia="0.000549292448 0.000223695708 0.000769619177 0.000333360171 -1.07893e-07 1.88213e-07" />

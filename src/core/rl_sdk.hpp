@@ -219,6 +219,8 @@ public:
     std::string config_name;
     std::string policy_dir;
     bool simulation_running = true;
+    bool pending_rl_switch = false;
+    int current_config_idx = -1;
     std::string ang_vel_axis = "body";
     unsigned long long episode_length_buf = 0;
     int InverseJointMapping(int idx) const;
