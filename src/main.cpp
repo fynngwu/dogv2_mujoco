@@ -438,7 +438,16 @@ void RL_Sim::RunModel()
         this->obs.actions.resize(this->params.Get<int>("num_of_dofs"), 0.0f);
 
         this->obs.ang_vel = this->robot_state.imu.gyroscope;
-        this->obs.commands = this->ComputeGoalCommand(this->robot_state.base_pos, this->robot_state.imu.quaternion);
+        {
+            auto cmd3 = this->ComputeGoalCommand(this->robot_state.base_pos, this->robot_state.imu.quaternion);
+            auto defaults = this->params.Get<std::vector<float>>("commands_default");
+            this->obs.commands.resize(std::max(defaults.size(), size_t(3)));
+            this->obs.commands[0] = cmd3[0];
+            this->obs.commands[1] = cmd3[1];
+            this->obs.commands[2] = cmd3[2];
+            for (size_t i = 3; i < this->obs.commands.size(); ++i)
+                this->obs.commands[i] = defaults[i];
+        }
 
         if (this->params.Has("commands_clip_lower") && this->params.Has("commands_clip_upper"))
         {
