@@ -124,6 +124,14 @@ std::vector<float> RL::ComputeObservation()
         {
             obs_list.push_back(this->obs.actions);
         }
+        else if (observation == "last_actions")
+        {
+            obs_list.push_back(this->obs.last_actions);
+        }
+        else if (observation == "clock_inputs")
+        {
+            obs_list.push_back(this->obs.clock_inputs);
+        }
     }
 
     this->obs_dims.clear();
@@ -146,13 +154,19 @@ void RL::InitObservations()
     this->obs.lin_vel = {0.0f, 0.0f, 0.0f};
     this->obs.ang_vel = {0.0f, 0.0f, 0.0f};
     this->obs.gravity_vec = {0.0f, 0.0f, -1.0f};
-    this->obs.commands = {0.0f, 0.0f, 0.0f};
+    this->obs.commands = this->params.Has("commands_default") ?
+        this->params.Get<std::vector<float>>("commands_default") :
+        std::vector<float>(this->params.Get<int>("num_observations"), 0.0f);
     this->obs.base_quat = {0.0f, 0.0f, 0.0f, 1.0f};
     this->obs.dof_pos = this->params.Get<std::vector<float>>("default_dof_pos");
     this->obs.dof_vel.clear();
     this->obs.dof_vel.resize(this->params.Get<int>("num_of_dofs"), 0.0f);
     this->obs.actions.clear();
     this->obs.actions.resize(this->params.Get<int>("num_of_dofs"), 0.0f);
+    this->obs.last_actions.clear();
+    this->obs.last_actions.resize(this->params.Get<int>("num_of_dofs"), 0.0f);
+    this->obs.clock_inputs = {0.0f, 0.0f, 0.0f, 0.0f};
+    this->gait_index = 0.0f;
     this->ComputeObservation();
 }
 
@@ -325,6 +339,38 @@ void RL::AttitudeProtect(const std::vector<float> &quaternion, float pitch_thres
         this->control.SetKeyboard(Input::Keyboard::P);
         std::cout << LOGGER::WARNING << "Pitch exceeds " << pitch_threshold << " degrees. Current: " << pitch << " degrees." << std::endl;
     }
+}
+
+void RL::UpdateClockInputs()
+{
+    float dt = this->params.Get<float>("dt") * this->params.Get<int>("decimation");
+    size_t num_commands = this->obs.commands.size();
+    if (num_commands > 8)
+    {
+        float frequency = this->obs.commands[4];
+        float phase = this->obs.commands[5];
+        float offset = this->obs.commands[6];
+        float bound = this->obs.commands[7];
+
+        this->gait_index = std::fmod(this->gait_index + dt * frequency, 1.0f);
+
+        float foot_indices[4];
+        foot_indices[0] = std::fmod(this->gait_index + phase + offset + bound, 1.0f);
+        foot_indices[1] = std::fmod(this->gait_index + offset, 1.0f);
+        foot_indices[2] = std::fmod(this->gait_index + bound, 1.0f);
+        foot_indices[3] = std::fmod(this->gait_index + phase, 1.0f);
+
+        this->obs.clock_inputs.resize(4);
+        this->obs.clock_inputs[0] = sinf(2.0f * M_PI * foot_indices[0]);
+        this->obs.clock_inputs[1] = sinf(2.0f * M_PI * foot_indices[1]);
+        this->obs.clock_inputs[2] = sinf(2.0f * M_PI * foot_indices[2]);
+        this->obs.clock_inputs[3] = sinf(2.0f * M_PI * foot_indices[3]);
+    }
+}
+
+std::vector<float> RL::GetLinVel()
+{
+    return {0.0f, 0.0f, 0.0f};
 }
 
 #include <termios.h>

@@ -432,11 +432,31 @@ void RL_Sim::RunModel()
     if (this->rl_init_done && simulation_running)
     {
         this->episode_length_buf += 1;
+
+        this->obs.last_actions = this->obs.actions;
+        this->obs.actions.clear();
+        this->obs.actions.resize(this->params.Get<int>("num_of_dofs"), 0.0f);
+
         this->obs.ang_vel = this->robot_state.imu.gyroscope;
         this->obs.commands = this->ComputeGoalCommand(this->robot_state.base_pos, this->robot_state.imu.quaternion);
+
+        if (this->params.Has("commands_clip_lower") && this->params.Has("commands_clip_upper"))
+        {
+            auto clip_lower = this->params.Get<std::vector<float>>("commands_clip_lower");
+            auto clip_upper = this->params.Get<std::vector<float>>("commands_clip_upper");
+            if (this->obs.commands.size() == clip_lower.size())
+            {
+                this->obs.commands = clamp(this->obs.commands, clip_lower, clip_upper);
+            }
+        }
+
         this->obs.base_quat = this->robot_state.imu.quaternion;
         this->obs.dof_pos = this->robot_state.motor_state.q;
         this->obs.dof_vel = this->robot_state.motor_state.dq;
+
+        this->obs.lin_vel = this->GetLinVel();
+
+        this->UpdateClockInputs();
 
         this->obs.actions = this->Forward();
         this->ComputeOutput(this->obs.actions, this->output_dof_pos, this->output_dof_vel, this->output_dof_tau);

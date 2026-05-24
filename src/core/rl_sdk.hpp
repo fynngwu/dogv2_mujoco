@@ -1,6 +1,8 @@
 #ifndef RL_SDK_HPP
 #define RL_SDK_HPP
 
+#define _USE_MATH_DEFINES
+#include <cmath>
 #include <iostream>
 #include <string>
 #include <exception>
@@ -162,6 +164,8 @@ struct Observations
     std::vector<T> dof_pos;
     std::vector<T> dof_vel;
     std::vector<T> actions;
+    std::vector<T> last_actions;
+    std::vector<T> clock_inputs;
 };
 
 class RL
@@ -173,6 +177,7 @@ public:
     YamlParams params;
     Observations<float> obs;
     std::vector<int> obs_dims;
+    float gait_index = 0.0f;
 
     RobotState<float> robot_state;
     RobotCommand<float> robot_command;
@@ -197,6 +202,8 @@ public:
     virtual void SetCommand(const RobotCommand<float> *command) = 0;
     void StateController(const RobotState<float> *state, RobotCommand<float> *command);
     void ComputeOutput(const std::vector<float> &actions, std::vector<float> &output_dof_pos, std::vector<float> &output_dof_vel, std::vector<float> &output_dof_tau);
+    void UpdateClockInputs();
+    std::vector<float> GetLinVel();
 
     void ReadYaml(const std::string& config_path);
 
