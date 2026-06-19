@@ -210,6 +210,11 @@ void RL_Sim::SetCommand(const RobotCommand<float> *command)
 
             mj_data->ctrl[joint_idx] = target_torque;
 
+            int ndof = this->params.Get<int>("num_of_dofs");
+            if (this->last_torques.size() != (size_t)ndof)
+                this->last_torques.resize(ndof);
+            this->last_torques[i] = target_torque;
+
             if (print_count % 50 == 0)
             {
                 printf("%-10s %10.4f %10.4f %10.4f %10.4f\n",
@@ -277,6 +282,8 @@ void RL_Sim::RobotControl()
             record_file << "step";
             for (int i = 0; i < n; ++i) record_file << ",dof_pos_" << i;
             for (int i = 0; i < n; ++i) record_file << ",target_dof_pos_" << i;
+            for (int i = 0; i < n; ++i) record_file << ",dof_vel_" << i;
+            for (int i = 0; i < n; ++i) record_file << ",torque_" << i;
             record_file << "\n";
 
             record_step = 0;
@@ -296,6 +303,8 @@ void RL_Sim::RobotControl()
         record_file << record_step;
         for (int i = 0; i < n; ++i) record_file << "," << this->robot_state.motor_state.q[i];
         for (int i = 0; i < n; ++i) record_file << "," << this->robot_command.motor_command.q[i];
+        for (int i = 0; i < n; ++i) record_file << "," << this->robot_state.motor_state.dq[i];
+        for (int i = 0; i < n; ++i) record_file << "," << (i < (int)this->last_torques.size() ? this->last_torques[i] : 0.0f);
         record_file << "\n";
         record_step++;
     }

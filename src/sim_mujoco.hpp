@@ -77,6 +77,7 @@ private:
     bool recording = false;
     std::ofstream record_file;
     int record_step = 0;
+    std::vector<float> last_torques;
 
     std::vector<std::string> policy_config_dirs;
     void ScanPolicyConfigs(const std::string& policies_root);
