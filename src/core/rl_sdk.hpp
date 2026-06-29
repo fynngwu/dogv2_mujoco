@@ -103,6 +103,7 @@ struct Control
     float x = 0.0f;
     float y = 0.0f;
     float yaw = 0.0f;
+    float height = 0.0f;
     float fixed_speed = 1.0f;
     bool navigation_mode = false;
 

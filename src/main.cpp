@@ -103,7 +103,7 @@ RL_Sim::RL_Sim(const std::string& model_xml, const std::string& config_yaml, con
     this->loop_joystick->start();
 
     std::cout << LOGGER::INFO << "RL_Sim start" << std::endl;
-    std::cout << LOGGER::INFO << "Keys: 0=GetUp  9=GetDown  P=Passive  W/S/A/D/Q/E=Move  Space=Stop  R=Reset  L=Record  Enter=Pause  1-9=Switch policy" << std::endl;
+    std::cout << LOGGER::INFO << "Keys: 0=GetUp  9=GetDown  P=Passive  W/S/A/D/Q/E=Move  Space=Stop  R=Reset  L=Record  Enter=Pause  Z/X=Height  1-9=Switch policy" << std::endl;
 
     sim->RenderLoop();
 }
@@ -188,7 +188,7 @@ void RL_Sim::SetCommand(const RobotCommand<float> *command)
                    this->current_config_idx + 1,
                    this->config_name.c_str());
             printf("\n");
-            printf("Keys: 0=GetUp  9=GetDown  P=Passive  W/S/A/D/Q/E=Move  Space=Stop  R=Reset  L=Record  Enter=Pause\n");
+            printf("Keys: 0=GetUp  9=GetDown  P=Passive  W/S/A/D/Q/E=Move  Space=Stop  R=Reset  L=Record  Enter=Pause  Z/X=Height\n");
             printf("Policies:");
             for (size_t i = 0; i < this->policy_config_dirs.size(); ++i)
             {

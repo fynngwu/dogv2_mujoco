@@ -43,11 +43,22 @@ void RL::StateController(const RobotState<float>* state, RobotCommand<float>* co
     {
         this->control.yaw = -this->control.fixed_speed;
     }
+    if (this->control.current_keyboard == Input::Keyboard::Z)
+    {
+        this->control.height += 0.005f;
+        std::cout << std::endl << LOGGER::INFO << "Height: " << this->control.height << std::endl;
+    }
+    if (this->control.current_keyboard == Input::Keyboard::X)
+    {
+        this->control.height -= 0.005f;
+        std::cout << std::endl << LOGGER::INFO << "Height: " << this->control.height << std::endl;
+    }
     if (this->control.current_keyboard == Input::Keyboard::Space)
     {
         this->control.x = 0.0f;
         this->control.y = 0.0f;
         this->control.yaw = 0.0f;
+        this->control.height = 0.0f;
     }
     if (this->control.current_keyboard == Input::Keyboard::I)
     {
@@ -146,7 +157,7 @@ void RL::InitObservations()
     this->obs.lin_vel = {0.0f, 0.0f, 0.0f};
     this->obs.ang_vel = {0.0f, 0.0f, 0.0f};
     this->obs.gravity_vec = {0.0f, 0.0f, -1.0f};
-    this->obs.commands = {0.0f, 0.0f, 0.0f};
+    this->obs.commands.assign(this->params.Get<std::vector<float>>("commands_scale").size(), 0.0f);
     this->obs.base_quat = {0.0f, 0.0f, 0.0f, 1.0f};
     this->obs.dof_pos = this->params.Get<std::vector<float>>("default_dof_pos");
     this->obs.dof_vel.clear();
@@ -171,6 +182,7 @@ void RL::InitControl()
     this->control.x = 0.0f;
     this->control.y = 0.0f;
     this->control.yaw = 0.0f;
+    this->control.height = 0.0f;
     this->current_goal_idx = 0;
 }
 
@@ -182,9 +194,14 @@ void RL::SetGoalPositions(const std::vector<std::vector<float>>& goals)
 
 std::vector<float> RL::ComputeGoalCommand(const std::vector<float>& base_pos, const std::vector<float>& base_quat)
 {
+    size_t num_commands = this->params.Get<std::vector<float>>("commands_scale").size();
+
     if (this->goal_positions.empty())
     {
-        return {this->control.x, this->control.y, this->control.yaw};
+        std::vector<float> cmd = {this->control.x, this->control.y, this->control.yaw};
+        if (num_commands > 3)
+            cmd.push_back(this->control.height);
+        return cmd;
     }
 
     if (this->current_goal_idx >= static_cast<int>(this->goal_positions.size()))
@@ -214,7 +231,10 @@ std::vector<float> RL::ComputeGoalCommand(const std::vector<float>& base_pos, co
     while (delta_yaw < -pi) delta_yaw += 2.0f * pi;
 
     float distance_obs = clamp(distance / this->params.Get<float>("goal_distance_range", 4.0f), 0.0f, 1.0f);
-    return {delta_yaw, distance_obs, this->params.Get<float>("goal_target_speed", 0.8f)};
+    std::vector<float> cmd = {delta_yaw, distance_obs, this->params.Get<float>("goal_target_speed", 0.8f)};
+    if (num_commands > 3)
+        cmd.push_back(this->control.height);
+    return cmd;
 }
 
 void RL::InitJointNum(size_t num_joints)
